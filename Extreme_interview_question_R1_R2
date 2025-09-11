@@ -1,0 +1,281 @@
+Volatile keyword:
+
+Tells the compiler: “this variable may change outside normal program flow, don’t optimize it away.”
+
+Without it → compiler may keep values in CPU registers or optimize out repeated reads.
+
+With it → forces every access to actually read/write memory.
+========================================================================================================================
+
+What happens when right shift the signed integer value which is -ve?
+
+
+1. Representation of negative numbers
+
+In almost all modern systems, int is stored in two’s complement form.
+Example (32-bit int):
+
+-8  = 11111111 11111111 11111111 11111000
+
+2. Right shift operator >>
+
+There are two kinds of right shift:
+
+Logical right shift: fills leftmost bits with 0. (used for unsigned types)
+
+Arithmetic right shift: fills leftmost bits with the sign bit (preserves the sign). (used for signed types on most compilers)
+
+3. What C standard says
+
+For unsigned types: right shift is always logical (fill with 0).
+
+For signed negative values: implementation-defined (compiler/architecture decides).
+→ On most modern CPUs (like x86, GCC/Clang/MSVC), it’s arithmetic shift, meaning the sign bit is replicated.
+
+
+#include <stdio.h>
+
+int main() {
+    int x = -8;
+    int y = x >> 1;
+
+    printf("x = %d\n", x);
+    printf("y = %d\n", y);
+
+    return 0;
+}
+
+On a system with 32-bit int and arithmetic right shift:
+
+x = -8        // binary: 11111111 11111111 11111111 11111000
+x >> 1 = -4   // binary: 11111111 11111111 11111111 11111100
+
+
+5. Summary
+
+Unsigned right shift: always logical (fills with 0).
+
+Signed negative right shift:
+
+Arithmetic shift (common) → fills with sign bit, result stays negative.
+
+Logical shift (rare systems) → fills with 0, result could become large positive.
+
+Standard: implementation-defined.
+========================================================================================================================
+
+Reverse the bit only the the no of bits.
+
+#include <stdio.h>
+
+// Function to reverse bits only up to the number of bits in n
+unsigned int reverseBits(unsigned int n) {
+    unsigned int rev = 0;
+    int num_bits = 0;
+    unsigned int temp = n;
+
+    // count how many bits are actually needed
+    while (temp > 0) {
+        num_bits++;
+        temp >>= 1;
+    }
+
+    // reverse only num_bits
+    for (int i = 0; i < num_bits; i++) {
+        rev <<= 1;          // shift result left
+        rev |= (n & 1);     // copy last bit of n
+        n >>= 1;            // move to next bit
+    }
+
+    return rev;
+}
+
+what happens when the integer is signed int and holding negative value
+
+n doesnt end with only n of bits it counts to 32 bit as MSB of negative value holds 1
+========================================================================================================================
+
+Count the no of set bit in a integer
+
+#include <stdio.h>
+
+int countSetBits(int n) {
+    int count = 0;
+    while (n) {
+        n = n & (n - 1);  // remove last set bit
+        count++;
+    }
+    return count;
+}
+
+int main() {
+    int num = 29; // binary: 11101
+    printf("Number of set bits in %d is %d\n", num, countSetBits(num));
+    return 0;
+}
+========================================================================================================================
+
+C program to find the endianess
+
+#include <stdio.h>
+
+int main() {
+    unsigned int x = 0x12345678;
+    char *c = (char*)&x;
+
+    if (*c==0x78) {
+        printf("Little Endian\n");
+    } else {
+        printf("Big Endian\n");
+    }
+
+    return 0;
+}
+=========================================================================================================================
+
+Output of following code
+
+
+#include <stdio.h>
+
+int main() {
+    unsigned int a = 5;
+    int b = -15;
+    printf("The value of c is :%d\n",c);
+    if(a+b < 5) {
+        printf("less\n");
+    }
+    else {
+        printf("Greater\n");
+    }
+
+    return 0;
+}
+
+
+In mixed signed + unsigned arithmetic, the signed int b is converted to unsigned. So Greater will be printed
+===========================================================================================================================
+
+What happens when the following code execute
+
+
+void a() {
+    int x;
+    int y;
+    x=100;
+}
+void b() {
+    int z;
+    printf("The value of %d\n",++z);
+}
+int main() {
+    a();
+    b();
+    b();
+    b();
+
+    return 0;
+}
+
+Key points:
+
+In a():
+
+x and y are local variables.
+
+They exist only while the function executes and then go out of scope.
+
+x = 100; assigns a value, but since nothing is printed or returned, it does nothing visible.
+
+In b():
+
+int z; is a local variable.
+
+It is not initialized, so it contains a garbage value (whatever random data was in that memory location).
+
+When you do ++z, you increment garbage → undefined behavior.
+
+So the output will be unpredictable (different values each run, or even crashing).
+
+
+The following also can happen
+*****************************
+z is a local variable.
+
+Since it’s not initialized, its value is whatever junk is left in that stack location.
+
+The trick: when you call a(), the function allocates space for its locals (x, y) on the stack. After a() returns, the memory is reused for b()’s local z.
+
+Since x was set to 100, that stack slot still has 100 in it when b() runs.
+
+So z starts with 100 (by accident) → ++z gives 101.
+
+Next call to b(), the same memory slot is reused, now containing 101 → incremented to 102.
+
+Then 103, and so on.
+=================================================================================================================================
+
+What is top half and bottom half? Spinlocks
+About Linux programming. What I have done in my previous projects
+
+=================================================================================================================================
+
+Count the no of difference bit between two integer
+
+
+#include <stdio.h>
+
+// Function to count set bits using Brian Kernighan's Algorithm
+int countSetBits(int n) {
+    int count = 0;
+    while (n) {
+        n = n & (n - 1); // remove last set bit
+        count++;
+    }
+    return count;
+}
+
+// Function to count number of different bits between a and b
+int countDifferentBits(int a, int b) {
+    int xor = a ^ b;       // XOR to get different bits
+    return countSetBits(xor);
+}
+
+int main() {
+    int x = 29;  // 11101
+    int y = 15;  // 01111
+
+    printf("Number of different bits: %d\n", countDifferentBits(x, y));
+    return 0;
+}
+
+================================================================================================================================
+
+Remove space from a string using pointer
+
+#include <stdio.h>
+
+void removeSpaces(char *str) {
+    char *read = str;   // pointer to read the original string
+    char *write = str;  // pointer to write characters without spaces
+
+    while (*read != '\0') {
+        if (*read != ' ') {     // copy only non-space characters
+            *write = *read;
+            write++;
+        }
+        read++;
+    }
+    *write = '\0';  // terminate the new string
+}
+
+int main() {
+    char str[] = "H e l l o   W o r l d";
+    printf("Original string: \"%s\"\n", str);
+
+    removeSpaces(str);
+    printf("String without spaces: \"%s\"\n", str);
+
+    return 0;
+}
+============================================================================================================================
