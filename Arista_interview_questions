@@ -1,0 +1,100 @@
+what is wrong with this code?
+
+#include<stdio.h>
+#include<stdlib.h>
+
+typedef struct  {
+        int a[5];
+        int i;
+}s;
+int main() {
+        s s1;
+        int i =0;
+
+        for (s1.i = 0; s1.i<=5; s1.i++) {
+                s1.a[s1.i]=1;
+        }
+
+        for (i=0;i<=5;i++) {
+                printf("%d\n",s1.a[i]);
+        }
+        return 0;
+}
+
+Ans:
+
+This cause a infinte loop, Because we are trying the access array out of bound, so when does we write to next which is the address of i, so i again becomes 0 and run the loop 5 times and again i getting 0, so it keeps on run infintely.
+====================================================================================================================================
+
+Remove all occurence of a node works directly on the head pointer
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Define linked list node
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+// Function to remove all occurrences of a given value
+void removeAll(struct Node** head, int val) {
+    struct Node *temp, *prev;
+
+    // Remove matching nodes at the head
+    while (*head != NULL && (*head)->data == val) {
+        temp = *head;
+        *head = (*head)->next;
+        free(temp);
+    }
+
+    // Traverse the rest of the list
+    prev = *head;
+    while (prev != NULL && prev->next != NULL) {
+        if (prev->next->data == val) {
+            temp = prev->next;
+            prev->next = temp->next;
+            free(temp);
+        } else {
+            prev = prev->next;
+        }
+    }
+
+}
+
+// Utility function to print the list
+void printList(struct Node* head) {
+    while (head != NULL) {
+        printf("%d -> ", head->data);
+        head = head->next;
+    }
+    printf("NULL\n");
+}
+
+// Utility function to create a new node
+struct Node* newNode(int data) {
+    struct Node* node = (struct Node*)malloc(sizeof(struct Node));
+    node->data = data;
+    node->next = NULL;
+    return node;
+}
+
+// Example usage
+int main() {
+    struct Node* head = newNode(1);
+    head->next = newNode(2);
+    head->next->next = newNode(2);
+    head->next->next->next = newNode(3);
+    head->next->next->next->next = newNode(2);
+
+    printf("Original list:\n");
+    printList(head);
+
+    removeAll(&head, 2);
+
+    printf("After removing 2:\n");
+    printList(head);
+
+    return 0;
+}
+====================================================================================================================================
