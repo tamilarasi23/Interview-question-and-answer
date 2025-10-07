@@ -279,3 +279,99 @@ int main() {
     return 0;
 }
 ============================================================================================================================
+Swap the little Endian to Big Endian
+
+#include<stdio.h>
+int main() {
+	unsigned int num = 0x12345678;
+	
+	unsigned int swapped = (((num>>24)&0xff)|((num>>8)&0xff00)|((num<<24)&0xff000000)|((num<<8)&0xff0000));
+	printf("%0x\n",swapped);
+	return 0;
+}
+============================================================================================================================
+what SRC and Dest mac/IP address in 802.3 packet when ping to google happens
+
+When you ping Google (for example 8.8.8.8), there are two layers of addressing involved:
+
+Layer 3 (IP layer) — used end-to-end (source → destination across the Internet)
+
+Layer 2 (Ethernet / IEEE 802.3 layer) — used only within your local network hop (source → gateway)
+
+Let’s separate them carefully:
+
+🔹 Layer 3: IP addresses inside the packet
+
+The IP header (which sits inside the Ethernet frame) will contain:
+
+Field	Example	Notes
+Source IP	192.168.1.10	Your system’s private IP address
+Destination IP	8.8.8.8	Google’s public IP address (the one you ping)
+
+✅ These don’t change as the packet travels through routers.
+Every router forwards the same IP addresses.
+
+🔹 Layer 2: MAC addresses on the Ethernet frame (802.3)
+
+The Ethernet (802.3) header wraps around the IP packet, and it’s only valid between directly connected devices — your PC and your gateway.
+
+Field	Example	Meaning
+Source MAC	AA:AA:AA:AA:AA:AA	Your computer’s NIC MAC address
+Destination MAC	BB:BB:BB:BB:BB:BB	Your router/gateway’s MAC address
+EtherType	0x0800	Indicates payload is IPv4
+
+✅ These change at every hop — once your router forwards the packet to the next router, it replaces the Ethernet header with new source/destination MACs relevant to that link.
+
+============================================================================================================================
+
+Machine A → Router1 (MTU 1500) → Router2 (MTU 1200) → Router3 (MTU 1000) → Machine B
+
+Now Machine A wants to send a UDP packet to Machine B.
+
+
+Two cases — depends on IP header flag: DF (Don’t Fragment)
+🅰️ Case 1: DF bit = 0 (Fragmentation allowed)
+
+Then intermediate routers can fragment the packet.
+
+✅ How it works:
+
+Machine A sends a 1500-byte UDP packet.
+
+Router1 passes (MTU=1500) → OK
+
+Router2 MTU=1200 → packet too big → Router2 fragments it:
+
+Fragment 1: bytes 0–1199
+
+Fragment 2: bytes 1200–1499
+
+Router3 (MTU=1000) → fragments again if needed.
+
+Machine B receives multiple IP fragments and reassembles them to reconstruct the original UDP datagram.
+
+⚠️ Disadvantage:
+Fragmentation adds overhead and reduces performance — and if any fragment is lost, the entire packet is discarded.
+
+🅱️ Case 2: DF bit = 1 (Don’t Fragment) → common today
+
+Modern systems set the DF flag and use Path MTU Discovery (PMTUD) instead.
+
+✅ How it works:
+
+Machine A sends 1500-byte packet with DF=1.
+
+Router2 (MTU=1200) drops it — cannot forward (too big).
+
+Router2 sends back an ICMP “Fragmentation Needed” message (Type 3, Code 4) telling A:
+
+Hey! I can only handle 1200 bytes.
+
+
+Machine A learns that the path MTU = 1200 and reduces its packet size accordingly.
+
+It retransmits smaller packets that fit (≤1200 bytes).
+
+If later Router3 (MTU=1000) also drops packets, A will reduce again — until all routers accept the size.
+
+============================================================================================================================
